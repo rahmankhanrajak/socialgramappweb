@@ -3,11 +3,14 @@ import { useAuth } from "../context/AuthContext";
 import {
   getPosts,
   createPost,
+  updatePost,
+  deletePost,
 } from "../api/posts.api";
 import { Link } from "react-router-dom";
 
 export default function Feed() {
   const { user, token, logout } = useAuth();
+
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState("");
   const [editingPostId, setEditingPostId] = useState(null);
@@ -59,7 +62,18 @@ export default function Feed() {
     }
   };
 
- 
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+    try {
+      setError("");
+      await deletePost(postId, token);
+      loadPosts();
+    } catch (err) {
+      console.error("Delete post error:", err);
+      setError("Failed to delete post");
+    }
+  };
 
   return (
     <div>
@@ -76,7 +90,6 @@ export default function Feed() {
       <hr />
 
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       <form onSubmit={handleCreatePost}>
         <textarea
           placeholder="What's on your mind?"
@@ -90,7 +103,6 @@ export default function Feed() {
       </form>
 
       <hr />
-
 
       <div>
         {posts.map((p) => {
@@ -112,11 +124,56 @@ export default function Feed() {
                 <p>{p.content}</p>
               )}
 
+              {editingPostId === p._id && (
+                <>
+                  <textarea
+                    value={editingContent}
+                    onChange={(e) =>
+                      setEditingContent(e.target.value)
+                    }
+                    rows={3}
+                    cols={40}
+                  />
+                  <br />
+                  <button
+                    onClick={() => handleUpdatePost(p._id)}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingPostId(null);
+                      setEditingContent("");
+                    }}
+                    style={{ marginLeft: 6 }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+
               <small>
                 {new Date(p.createdAt).toLocaleString()}
               </small>
 
-           
+              {isOwner && editingPostId !== p._id && (
+                <div style={{ marginTop: 6 }}>
+                  <button
+                    onClick={() => {
+                      setEditingPostId(p._id);
+                      setEditingContent(p.content);
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeletePost(p._id)}
+                    style={{ marginLeft: 6 }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}

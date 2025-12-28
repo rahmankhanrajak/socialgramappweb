@@ -15,3 +15,14 @@ export const createPost = (content, token) =>
   );
 
 
+export const updatePost = (postId, content, token) =>
+  axios.put(
+    `${API_BASE}/${postId}`,
+    { content },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+export const deletePost = (postId, token) =>
+  axios.delete(`${API_BASE}/${postId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
